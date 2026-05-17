@@ -39,29 +39,3 @@ export const config = {
 export const vectorStoreIds = config.OPENAI_VECTOR_STORE_IDS.split(",")
   .map((id) => id.trim())
   .filter(Boolean);
-
-export function assertProductionConfig(env: {
-  NODE_ENV?: string;
-  JWT_SECRET?: string;
-  WEB_ORIGIN?: string;
-  DATABASE_URL?: string;
-}) {
-  if (env.NODE_ENV !== "production") return;
-
-  const errors: string[] = [];
-  if (!env.JWT_SECRET || env.JWT_SECRET === "dev-secret-change-before-production") {
-    errors.push("JWT_SECRET must be set to a strong production secret");
-  }
-  if (!env.WEB_ORIGIN || env.WEB_ORIGIN.includes("localhost")) {
-    errors.push("WEB_ORIGIN must contain the deployed frontend origin");
-  }
-  if (!env.DATABASE_URL || env.DATABASE_URL === "file:./dev.db") {
-    errors.push("DATABASE_URL must point to the production database");
-  }
-
-  if (errors.length) {
-    throw new Error(`Invalid production configuration: ${errors.join("; ")}`);
-  }
-}
-
-assertProductionConfig(process.env);
