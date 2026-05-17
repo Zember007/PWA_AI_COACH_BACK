@@ -12,6 +12,17 @@ if (process.env.NODE_ENV === "test" && !process.env.UPLOAD_DIR) {
   process.env.UPLOAD_DIR = path.join(os.tmpdir(), "pwa-ai-coach-test-uploads");
 }
 
+/** Приводим к виду, который шлёт браузер в заголовке Origin (scheme+host+port, без path и без завершающего /). */
+function normalizeBrowserOriginPart(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return trimmed;
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed.replace(/\/+$/, "");
+  }
+}
+
 const envSchema = z.object({
   DATABASE_URL: z.string().default("file:./dev.db"),
   PORT: z.coerce.number().default(4100),
@@ -27,7 +38,7 @@ const envSchema = z.object({
 const parsed = envSchema.parse(process.env);
 
 const webOrigins = parsed.WEB_ORIGIN.split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeBrowserOriginPart(origin))
   .filter(Boolean);
 
 export const config = {
