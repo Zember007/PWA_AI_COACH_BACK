@@ -1,0 +1,10 @@
+# Railway: set service root to PWA_AI_COACH_BACK.
+# SQLite: смонтируйте постоянный volume и задайте DATABASE_URL=file:/data/coach.db (или другой путь на volume).
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "pnpm start:prod"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

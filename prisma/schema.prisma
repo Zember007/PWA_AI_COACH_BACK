@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  profile      Profile?
+  refreshTokens RefreshToken[]
+  foodLogs     FoodLog[]
+  waterLogs    WaterLog[]
+  labResults   LabResult[]
+  conversations Conversation[]
+  orders       Order[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  name               String
+  age                Int
+  sex                String
+  height             Int
+  weight             Int
+  goal               String
+  activityLevel      String
+  wellbeing          String   @default("")
+  dietRestrictionsJson String
+  allergiesJson      String
+  currentSupplementsJson String
+  symptomsJson       String
+  medicalConsent     Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodLog {
+  id        String   @id @default(cuid())
+  userId    String
+  foodId    String?
+  foodName  String?
+  grams     Int
+  calories  Int?
+  protein   Float?
+  fat       Float?
+  carbs     Float?
+  source    String   @default("catalog")
+  confidence Float?
+  notes     String?
+  uploadId  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  ml        Int
+  container String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LabResult {
+  id          String   @id @default(cuid())
+  userId      String
+  sourceFileId String?
+  name        String
+  value       Float
+  unit        String
+  reference   String
+  status      String
+  explanation String
+  actionsJson String
+  relatedTagsJson String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String        @id @default(cuid())
+  userId    String
+  title     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+  uploads   Upload[]
+}
+
+model ChatMessage {
+  id                    String   @id @default(cuid())
+  conversationId        String
+  role                  String
+  text                  String
+  recommendedProductIdsJson String @default("[]")
+  citationsJson         String   @default("[]")
+  safetyJson            String   @default("{}")
+  createdAt             DateTime @default(now())
+  conversation          Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Upload {
+  id              String   @id @default(cuid())
+  userId          String
+  conversationId  String
+  originalName    String
+  mimeType        String
+  size            Int
+  path            String
+  status          String
+  openaiFileId    String?
+  vectorStoreFileId String?
+  vectorStoreStatus String?
+  extractedText   String?
+  parsedLabsJson  String?
+  createdAt       DateTime @default(now())
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id                 String   @id
+  name               String
+  category           String
+  price              Int
+  description        String
+  compositionJson    String
+  goodForJson        String
+  notForJson         String
+  tagsJson           String
+  rating             Float
+  nutrientsJson      String
+  contraindicationsJson String
+  whyRecommended     String
+  imageTone          String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ContentItem {
+  id                 String   @id
+  slug               String   @unique
+  type               String
+  title              String
+  summary            String
+  body               String
+  category           String
+  tagsJson           String
+  relatedProductIdsJson String
+  citationsJson      String
+  publishedAt        DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  status    String
+  total     Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

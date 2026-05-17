@@ -1,0 +1,55 @@
+# Только проверки (тесты, сборка). Деплой — на стороне Railway.
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint & test & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NODE_ENV: test
+      DATABASE_URL: file:./test.db
+      JWT_SECRET: test-secret-with-enough-length
+      WEB_ORIGIN: http://localhost:5173
+      OPENAI_MODEL: gpt-5.5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate
+        run: pnpm prisma:generate
+
+      - name: Apply migrations (SQLite test DB)
+        run: pnpm prisma migrate deploy
+
+      - name: TypeScript build
+        run: pnpm build
+
+      - name: Tests
+        run: pnpm test
