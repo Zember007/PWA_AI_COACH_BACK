@@ -27,6 +27,41 @@ Seeded login:
 demo@ai-coach.local / demo-password
 ```
 
+## Docker / Cloud Run
+
+Контейнер теперь сам:
+
+- поднимает SQLite в writable runtime-пути;
+- применяет `prisma migrate deploy`;
+- запускает сиды;
+- стартует API на `PORT` из Cloud Run.
+
+Сборка:
+
+```bash
+docker build -t pwa-ai-coach-back ./PWA_AI_COACH_BACK
+```
+
+Локальный запуск контейнера:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e WEB_ORIGIN=http://localhost:5173 \
+  -e JWT_SECRET=replace-with-a-long-secret \
+  -e OPENAI_API_KEY=sk-... \
+  pwa-ai-coach-back
+```
+
+По умолчанию контейнер использует:
+
+```env
+DATABASE_URL=file:/tmp/pwa-ai-coach.db
+UPLOAD_DIR=/tmp/uploads
+PORT=8080
+```
+
+Важно: в Cloud Run `SQLite` и `UPLOAD_DIR` будут эфемерными. После рестарта инстанса, нового деплоя или масштабирования данные могут пропасть. Для постоянного хранения в проде лучше перейти на Cloud SQL / внешний storage.
+
 ## OpenAI
 
 Set these in `.env` for real model/RAG calls:
